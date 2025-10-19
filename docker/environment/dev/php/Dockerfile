@@ -1,21 +1,28 @@
-FROM php:7.2.29-apache
+FROM php:8.4-apache
 
-RUN apt-get update -y && apt-get install -y libpng-dev golang-go git
+# Set Go binary path
+ENV GOBIN=/usr/local/bin
 
-RUN mkdir -p /root/gocode \
-  && export GOPATH=/root/gocode \
-  && go get github.com/mailhog/mhsendmail \
-  && mv /root/gocode/bin/mhsendmail /usr/local/bin \
-  && rm -rf /root/gocode
+# Install system dependencies and PHP extensions in one RUN layer
+RUN apt-get update -y \
+  && apt-get install -y --no-install-recommends \
+    libpng-dev \
+    libzip-dev \
+    git \
+    golang-go \
+  && docker-php-ext-install mysqli gd zip \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install mysqli
+# Install mailhog mhsendmail binary
+RUN go install github.com/mailhog/mhsendmail@latest
 
-RUN docker-php-ext-install gd
-
-RUN docker-php-ext-install zip
-
+# Copy custom PHP configuration
 COPY ./conf.d /usr/local/etc/php/conf.d
 
-RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+# Set www-data UID/GID
+RUN usermod -u 1000 www-data \
+  && groupmod -g 1000 www-data
 
+# Switch to non-root user
 USER www-data
