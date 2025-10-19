@@ -15,7 +15,7 @@ down-site:
 	docker compose down -f docker/docker-compose.yml --volumes --remove-orphans --rmi local
 
 create-setting-site:
-	docker compose -f docker/docker-compose.yml cp -a environment/dev/php/settings.php php:/var/www/html/settings.php
+	docker compose -f docker/docker-compose.yml cp -a docker/environment/dev/php/settings.php php:/var/www/html/settings.php
 	docker compose -f docker/docker-compose.yml run --rm php mkdir logs
 
 mysql-import-site:
