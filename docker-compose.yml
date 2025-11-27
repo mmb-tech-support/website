@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  php-prod:
+    image: php-prod:latest
+    deploy:
+      replicas: 1
+    networks:
+      - webnet
+    volumes:
+      - php_logs_prod:/var/log/php
+
+  php-test:
+    image: php-test:latest
+    deploy:
+      replicas: 1
+    networks:
+      - webnet
+    volumes:
+      - php_logs_test:/var/log/php
+
+  nginx:
+    image: nginx-prod:latest
+    ports:
+      - "80:80"
+    deploy:
+        replicas: 1
+        update_config:
+          parallelism: 1
+          delay: 5s
+          order: start-first
+        restart_policy:
+          condition: any
+    volumes:
+      - nginx_logs:/var/log/nginx
+    networks:
+      - webnet
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost"]
+    #   interval: 10s
+    #   timeout: 2s
+    #   retries: 5
+
+volumes:
+  php_logs_prod:
+  php_logs_test:
+  nginx_logs:
+
+networks:
+  webnet:
+    driver: overlay
