@@ -1,8 +1,37 @@
 version: "3.9"
 
 services:
-  php-prod:
+  database_prod:
+    image: db-prod:latest
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mariadb_prod:/var/lib/mysql
+    networks:
+      - webnet
+
+  # database_test:
+  #   image: db-test:latest
+  #   environment:
+  #     MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+  #     MARIADB_DATABASE: ${DB_NAME}
+  #     MARIADB_USER: ${DB_USER}
+  #     MARIADB_PASSWORD: ${DB_PASSWORD}
+  #   volumes:
+  #     - mariadb_test:/var/lib/mysql
+  #   networks:
+  #     - webnet
+
+  php_prod:
     image: php-prod:latest
+    environment:
+      DB_HOST: database_prod
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
     deploy:
       replicas: 1
     networks:
@@ -10,14 +39,19 @@ services:
     volumes:
       - php_logs_prod:/var/log/php
 
-  php-test:
-    image: php-test:latest
-    deploy:
-      replicas: 1
-    networks:
-      - webnet
-    volumes:
-      - php_logs_test:/var/log/php
+  # php_test:
+  #   image: php-test:latest
+  #   environment:
+  #     DB_HOST: database_test
+  #     DB_NAME: ${DB_NAME}
+  #     DB_USER: ${DB_USER}
+  #     DB_PASSWORD: ${DB_PASSWORD}
+  #   deploy:
+  #     replicas: 1
+  #   networks:
+  #     - webnet
+  #   volumes:
+  #     - php_logs_test:/var/log/php
 
   nginx:
     image: nginx-prod:latest
@@ -42,6 +76,8 @@ services:
     #   retries: 5
 
 volumes:
+  mariadb_prod:
+  mariadb_test:
   php_logs_prod:
   php_logs_test:
   nginx_logs:
