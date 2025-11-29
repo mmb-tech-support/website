@@ -9,9 +9,26 @@ services:
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - mariadb_prod:/var/lib/mysql
+      - db_prod:/var/lib/mysql
     networks:
       - webnet
+
+  database_prod_backup:
+    image: db-prod-backup:latest
+    environment:
+      DB_HOST: database_prod
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+
+    networks:
+      - webnet
+    volumes:
+      - db_prod:/var/lib/mysql:ro
+      - db_backups:/backups
+    deploy:
+      mode: replicated-job
+      replicas: 1
+      restart_policy:
+        condition: none
 
   # database_test:
   #   image: db-test:latest
@@ -76,8 +93,10 @@ services:
     #   retries: 5
 
 volumes:
-  mariadb_prod:
-  mariadb_test:
+  db_prod:
+  db_backups:
+    external: true
+  db_test:
   php_logs_prod:
   php_logs_test:
   nginx_logs:
