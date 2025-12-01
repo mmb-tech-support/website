@@ -3,32 +3,50 @@ version: "3.9"
 services:
   database_prod:
     image: db-prod:latest
-    environment:
-      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MARIADB_DATABASE: ${DB_NAME}
-      MARIADB_USER: ${DB_USER}
-      MARIADB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_prod:/var/lib/mysql
+    secrets:
+      - db_root_password
+      - db_name
+      - db_user
+      - db_password
     networks:
       - webnet
 
   database_prod_backup:
     image: db-prod-backup:latest
+    volumes:
+      - db_prod:/var/lib/mysql
+      - db_backups:/backups
+    secrets:
+      - db_backup_user
+      - db_password
     environment:
-      DB_HOST: database_prod
-      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-
+      - DB_HOST=database_prod
     networks:
       - webnet
-    volumes:
-      - db_prod:/var/lib/mysql:ro
-      - db_backups:/backups
-    deploy:
-      mode: replicated-job
-      replicas: 1
-      restart_policy:
-        condition: none
+    # deploy:
+    #   mode: replicated-job
+    #   replicas: 1
+    #   restart_policy:
+    #     condition: none
+
+  # database_prod_restore:
+  #   image: db-prod-backup:latest
+  #   environment:
+  #     DB_HOST: database_prod
+  #     DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+  #   networks:
+  #     - webnet
+  #   volumes:
+  #     - db_prod:/var/lib/mysql
+  #     - db_backups:/backups:ro
+  #   deploy:
+  #     mode: replicated-job
+  #     replicas: 1
+  #     restart_policy:
+  #       condition: none
+  #   command: ["/usr/local/bin/restore.sh"]
 
   # database_test:
   #   image: db-test:latest
@@ -42,19 +60,19 @@ services:
   #   networks:
   #     - webnet
 
-  php_prod:
-    image: php-prod:latest
-    environment:
-      DB_HOST: database_prod
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-    deploy:
-      replicas: 1
-    networks:
-      - webnet
-    volumes:
-      - php_logs_prod:/var/log/php
+  # php_prod:
+  #   image: php-prod:latest
+  #   environment:
+  #     DB_HOST: database_prod
+  #     DB_NAME: ${DB_NAME}
+  #     DB_USER: ${DB_USER}
+  #     DB_PASSWORD: ${DB_PASSWORD}
+  #   deploy:
+  #     replicas: 1
+  #   networks:
+  #     - webnet
+  #   volumes:
+  #     - php_logs_prod:/var/log/php
 
   # php_test:
   #   image: php-test:latest
@@ -70,22 +88,22 @@ services:
   #   volumes:
   #     - php_logs_test:/var/log/php
 
-  nginx:
-    image: nginx-prod:latest
-    ports:
-      - "80:80"
-    deploy:
-        replicas: 1
-        update_config:
-          parallelism: 1
-          delay: 5s
-          order: start-first
-        restart_policy:
-          condition: any
-    volumes:
-      - nginx_logs:/var/log/nginx
-    networks:
-      - webnet
+  # nginx:
+  #   image: nginx-prod:latest
+  #   ports:
+  #     - "80:80"
+  #   deploy:
+  #       replicas: 1
+  #       update_config:
+  #         parallelism: 1
+  #         delay: 5s
+  #         order: start-first
+  #       restart_policy:
+  #         condition: any
+  #   volumes:
+  #     - nginx_logs:/var/log/nginx
+  #   networks:
+  #     - webnet
     # healthcheck:
     #   test: ["CMD", "curl", "-f", "http://localhost"]
     #   interval: 10s
@@ -104,3 +122,15 @@ volumes:
 networks:
   webnet:
     driver: overlay
+
+secrets:
+  db_root_password:
+    external: true
+  db_name:
+    external: true
+  db_user:
+    external: true
+  db_password:
+    external: true
+  db_backup_user:
+    external: true

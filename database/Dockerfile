@@ -1,4 +1,4 @@
-FROM mariadb:10.4
+FROM mariadb:12.1
 
 RUN apt-get update \
     && apt install -y pv \
@@ -7,6 +7,7 @@ RUN apt-get update \
     && rm -r /var/lib/apt/lists/*
 
 COPY db-init/ /docker-entrypoint-initdb.d/
+COPY db-run.sh /usr/local/bin/
 
 EXPOSE 3306
-CMD ["mysqld"]
+ENTRYPOINT ["db-run.sh"]
