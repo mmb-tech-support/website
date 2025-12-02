@@ -19,6 +19,7 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/*
 
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY ./conf.d/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY ./src/ /var/www/html/
 
@@ -37,4 +38,4 @@ WORKDIR /var/www/html
 
 EXPOSE 9000
 
-CMD ["php-fpm"]
+ENTRYPOINT [ "/usr/local/bin/docker-entrypoint.sh" ]
