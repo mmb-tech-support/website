@@ -1,8 +1,16 @@
 version: "3.9"
 
-services:
+networks:
+  external:
+    driver: overlay
+  prod_internal:
+    driver: overlay
+    internal: true
+  test_internal:
+    driver: overlay
+    internal: true
 
-  # Nodes
+services:
   database_prod:
     image: db-prod:latest
     volumes:
@@ -13,7 +21,7 @@ services:
       - db_user
       - db_password
     networks:
-      - webnet
+      - prod_internal
 
   database_test:
     image: db-test:latest
@@ -25,7 +33,7 @@ services:
       - db_user
       - db_password
     networks:
-      - webnet
+      - test_internal
 
   database_prod_backup:
     image: db-prod-backup:latest
@@ -38,7 +46,7 @@ services:
     environment:
       - DB_HOST=database_prod
     networks:
-      - webnet
+      - prod_internal
     deploy:
       mode: replicated-job
       replicas: 1
@@ -58,7 +66,7 @@ services:
     deploy:
       replicas: 1
     networks:
-      - webnet
+      - prod_internal
 
   php_test:
     image: php-test:latest
@@ -73,7 +81,7 @@ services:
     deploy:
       replicas: 1
     networks:
-      - webnet
+      - test_internal
 
   nginx:
     image: nginx-prod:latest
@@ -90,7 +98,9 @@ services:
     volumes:
       - nginx_logs:/var/log/nginx
     networks:
-      - webnet
+      - external
+      - prod_internal
+      - test_internal
 
 volumes:
   db_prod:
@@ -101,9 +111,6 @@ volumes:
   php_logs_test:
   nginx_logs:
 
-networks:
-  webnet:
-    driver: overlay
 
 secrets:
   db_root_password:
