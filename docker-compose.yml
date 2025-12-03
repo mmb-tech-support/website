@@ -1,0 +1,125 @@
+version: "3.9"
+
+networks:
+  external:
+    driver: overlay
+  prod_internal:
+    driver: overlay
+    internal: true
+  test_internal:
+    driver: overlay
+    internal: true
+
+services:
+  database_prod:
+    image: db-prod:latest
+    volumes:
+      - db_prod:/var/lib/mysql
+    secrets:
+      - db_root_password
+      - db_name
+      - db_user
+      - db_password
+    networks:
+      - prod_internal
+
+  database_test:
+    image: db-test:latest
+    volumes:
+      - db_test:/var/lib/mysql
+    secrets:
+      - db_root_password
+      - db_name
+      - db_user
+      - db_password
+    networks:
+      - test_internal
+
+  database_prod_backup:
+    image: db-prod-backup:latest
+    volumes:
+      - db_prod:/var/lib/mysql
+      - db_backups:/backups
+    secrets:
+      - db_backup_user
+      - db_password
+    environment:
+      - DB_HOST=database_prod
+    networks:
+      - prod_internal
+    deploy:
+      mode: replicated-job
+      replicas: 1
+      restart_policy:
+        condition: none
+
+  php_prod:
+    image: php-prod:latest
+    volumes:
+      - php_logs_prod:/var/log/php
+    secrets:
+      - db_user
+      - db_name
+      - db_password
+    environment:
+      DB_HOST: database_prod
+    deploy:
+      replicas: 1
+    networks:
+      - prod_internal
+
+  php_test:
+    image: php-test:latest
+    volumes:
+      - php_logs_test:/var/log/php
+    secrets:
+      - db_user
+      - db_name
+      - db_password
+    environment:
+      DB_HOST: database_test
+    deploy:
+      replicas: 1
+    networks:
+      - test_internal
+
+  nginx:
+    image: nginx-prod:latest
+    ports:
+      - "80:80"
+    deploy:
+        replicas: 1
+        update_config:
+          parallelism: 1
+          delay: 5s
+          order: start-first
+        restart_policy:
+          condition: any
+    volumes:
+      - nginx_logs:/var/log/nginx
+    networks:
+      - external
+      - prod_internal
+      - test_internal
+
+volumes:
+  db_prod:
+  db_test:
+  db_backups:
+    external: true
+  php_logs_prod:
+  php_logs_test:
+  nginx_logs:
+
+
+secrets:
+  db_root_password:
+    external: true
+  db_name:
+    external: true
+  db_user:
+    external: true
+  db_password:
+    external: true
+  db_backup_user:
+    external: true
