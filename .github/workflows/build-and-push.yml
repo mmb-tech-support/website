@@ -1,0 +1,89 @@
+name: Build and Push Docker Images
+
+on:
+  # push:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'nginx/**'
+      - 'php/**'
+      - 'database/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/build-and-push.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # - name: Check for changes
+      #   uses: dorny/paths-filter@v3
+      #   id: filter
+      #   with:
+      #     filters: |
+      #       docker:
+      #         - 'nginx/**'
+      #         - 'php/**'
+      #         - 'database/**'
+      #         - 'docker-compose.yml'
+
+      - name: Log in to GHCR
+        # if: steps.filter.outputs.docker == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push nginx-prod
+        # if: steps.filter.outputs.docker == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nginx
+          push: true
+          tags: ghcr.io/${{ github.repository }}/nginx-prod:${{ github.sha }},ghcr.io/${{ github.repository }}/nginx-prod:latest
+
+      - name: Build and push php-prod
+        # if: steps.filter.outputs.docker == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./php
+          push: true
+          tags: ghcr.io/${{ github.repository }}/php-prod:${{ github.sha }},ghcr.io/${{ github.repository }}/php-prod:latest
+
+      # - name: Build and push php-test
+      #   if: steps.filter.outputs.docker == 'true'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./php
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository }}/php-test:${{ github.sha }},ghcr.io/${{ github.repository }}/php-test:latest
+
+      # - name: Build and push db-prod
+      #   if: steps.filter.outputs.docker == 'true'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./database
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository }}/db-prod:${{ github.sha }},ghcr.io/${{ github.repository }}/db-prod:latest
+
+      # - name: Build and push db-test
+      #   if: steps.filter.outputs.docker == 'true'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./database
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository }}/db-test:${{ github.sha }},ghcr.io/${{ github.repository }}/db-test:latest
+
+      # - name: Build and push db-prod-backup
+      #   if: steps.filter.outputs.docker == 'true'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./database/backup
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository }}/db-prod-backup:${{ github.sha }},ghcr.io/${{ github.repository }}/db-prod-backup:latest
