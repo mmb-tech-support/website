@@ -103,7 +103,7 @@
 		$ints = array();
 		for ($i = 1; $i < $len; $i++)
 		{
-			if ($skipped[$i] == $last + 1)
+			if (is_numeric($skipped[$i]) && is_numeric($last) && $skipped[$i] == $last + 1)
 			{
 				$last = $skipped[$i];
 				continue;
