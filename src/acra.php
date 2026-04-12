@@ -1,11 +1,12 @@
 <?
+include("settings.php");
 // Устанавливаем часовой пояс по умолчанию
 date_default_timezone_set("Europe/Moscow");
 
 // Сохраняем ошибки php в лог
 ini_set("log_errors", 1);
 ini_set("log_warnings", 1);
-ini_set("error_log", "/usr/share/nginx/html/logs/acra.log");
+ini_set("error_log", $AcraLogPath);
 
 // Проверка того, что скрипт запущен напрямую, а не включен куда-то через include
 if (realpath(__FILE__) != realpath($_SERVER['DOCUMENT_ROOT'] . $_SERVER['SCRIPT_NAME']))
@@ -22,7 +23,6 @@ $json = json_decode($post, true);
 if (is_null($json)) logError("Некорректный JSON на входе");
 
 // Подключаемся к базе данных
-include("settings.php");
 try {
     $pdo = new PDO("mysql:host=$ServerName;dbname=$DBName;charset=utf8", $WebUserName, $WebUserPassword);
 } catch (Exception $e) {
@@ -83,7 +83,7 @@ $sql = null;
 // Запись в лог об ошибке
 function logError($message)
 {
-  file_put_contents("/usr/share/nginx/html/logs/acra.log", date("Y-m-d H:i:s ") . $message . "\n", FILE_APPEND);
+  file_put_contents($AcraLogPath, date("Y-m-d H:i:s ") . $message . "\n", FILE_APPEND);
   die($message);
 }
 
