@@ -311,7 +311,7 @@ function ReceiveDatabase(PDO $pdo, $user_id)
     if ($content === FALSE) die("Ошибка распаковки файла");
 
     // Сохраняем файл
-    $fullname = "/usr/share/nginx/html/logs/mmb.sqlite.$user_id." . date("c");
+    $fullname = $AndroidAppSqliteDirectory . "/mmb.sqlite.$user_id." . date("c");
     $file = fopen($fullname, "w");
     if ($file === FALSE) die("Ошибка создания файла '" . $fullname . "'");
     $result = fwrite($file, $content);

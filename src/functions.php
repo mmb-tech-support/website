@@ -798,18 +798,18 @@ class CMmbAuth {
 
     // Отправка писем с сайта
     function SendMail($Email, $Message, $ToName='', $Subject='Информация с сайта ММБ') {
-   
+        include('settings.php');
         // 20.01.2012 Заменил штатную функцию на более удобную  send_mime_mail (см. ниже)
-        $result = send_mime_mail('Робот сайта ММБ',	// имя отправителя
-		    'mmb@progressor.ru',		// email отправителя
+        $result = send_mime_mail($MailFromLabel,	// имя отправителя
+		    $MailFrom,				// email отправителя
 		    $ToName,				// имя получателя
 		    trim($Email),			// email получателя
 		    $Subject,				// тема письма
 		    $Message."\r\n" .			// текст письма
 			'Если Вам что-то непонятно, ищите ответы на вопросы здесь: https://github.com/realtim/mmb/wiki/Вопросы-и-ответы'."\r\n" .
 			'О проблемах, которые не удалось решить самостоятельно, пишите на mmbsite@googlegroups.com'."\r\n",
-		    'mmbsite@googlegroups.com',		// Reply-To
-		    'noreply@mmb.progressor.ru');	// Return-Path
+		    $MailReplyTo,			// Reply-To
+		    $MailReturnPath);			// Return-Path
         if (!$result) CMmbLogger::e('EMail', "Failed to send email to user with email '$Email' and name '$ToName'");
         return $result;
     }
