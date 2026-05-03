@@ -15,7 +15,7 @@ if ($action == "ViewAdminDataPage")  {
 // =============== Печать карточек ===================
 elseif ($action == 'PrintRaidTeams')
 {
-  
+
 // Проверяем, что передали идентификатор ММБ
 $RaidId = (int) mmb_validateInt($_REQUEST, 'RaidId', -1);
 if ($RaidId < 0)
@@ -93,7 +93,7 @@ if ($RaidId < 0)
 			print(';;;;'.$UserRow['user_name'].' '.$UserRow['user_birthyear'].';<br />'."\n");
 		}
 	}
-  
+
 	mysqli_free_result($UserResult);
   }
 
@@ -131,7 +131,7 @@ elseif ($action == 'RaidCardsExport')
 
 	//fwrite($output, iconv('UTF-8', 'Windows-1251', 'Дистанция;Номера карточек')."\n");
 	fwrite($output, 'Дистанция;Номера карточек'."\n");
-  
+
   	$sql = "select t.team_num, d.distance_name
 		  from Teams t
 	       		inner join Distances d on t.distance_id = d.distance_id
@@ -164,9 +164,9 @@ elseif ($action == 'RaidCardsExport')
   	mysqli_free_result($Result);
 
   	// записываем накопленное
-  	
 
-  	
+
+
   	fwrite($output, $CardsArr."\n");
 //	fwrite($output, iconv('UTF-8', 'Windows-1251', $CardsArr)."\n");
   	fwrite($output, '===='."\n");
@@ -209,7 +209,7 @@ elseif ($action == 'RaidCardsExport')
 				fwrite($output, $strtowrite."\n");
 			}
 		}
-  
+
 		mysqli_free_result($UserResult);
   	}
 
@@ -231,7 +231,7 @@ elseif ($action == 'JSON')
    }
 
   // include("json.php");
-	
+
 	if ($RaidId <= 0)
 	{
 		CMmb::setShortResult('Не указан ММБ', '');
@@ -250,7 +250,7 @@ elseif ($action == 'JSON')
 	$Result = MySqlQuery($Sql);
 	while ( ( $Row = mysqli_fetch_assoc($Result) ) ) { $data["Distances"][] = $Row; }
 	mysqli_free_result($Result);
-	// ScanPoints: 
+	// ScanPoints:
 	$Sql = "select sp.scanpoint_id, sp.raid_id, sp.scanpoint_name, sp.scanpoint_order  from ScanPoints sp where sp.scanpoint_hide = 0 and sp.raid_id = $RaidId";
 	$Result = MySqlQuery($Sql);
 	while ( ( $Row = mysqli_fetch_assoc($Result) ) ) { $data["ScanPoints"][] = $Row; }
@@ -261,7 +261,7 @@ elseif ($action == 'JSON')
 	$Result = MySqlQuery($Sql);
 	while ( ( $Row = mysqli_fetch_assoc($Result) ) ) { $data["LevelPoints"][] = $Row; }
 	mysqli_free_result($Result);
-	// LevelPointDiscounts: 
+	// LevelPointDiscounts:
 	$Sql = "select lpd.levelpointdiscount_id, lpd.distance_id, lpd.levelpointdiscount_value, lpd.levelpointdiscount_start, lpd.levelpointdiscount_finish from LevelPointDiscounts lpd inner join Distances d on lpd.distance_id = d.distance_id where lpd.levelpointdiscount_hide = 0 and d.distance_hide = 0 and d.raid_id = $RaidId";
 	$Result = MySqlQuery($Sql);
 	while ( ( $Row = mysqli_fetch_assoc($Result) ) ) { $data["LevelPointDiscounts"][] = $Row; }
@@ -289,8 +289,8 @@ elseif ($action == 'JSON')
 	header("Content-Type: application/octet-stream");
 	header("Content-Disposition: attachment; filename=\"update.json\"");
 	// Вывод json
-	print json_encode( $data );	
-	  
+	print json_encode( $data );
+
   // Можно не прерывать, но тогда нужно написать обработчик в index, чтобы не выводить дальше ничего
   die();
   return;
@@ -298,14 +298,14 @@ elseif ($action == 'JSON')
 // =============== Загрузка файла с планшета =======
 elseif ($action == 'LoadRaidDataFile')
 {
-	
-        $statustext = ''; 
 
-        // Пока разрешил и модератору         
+        $statustext = '';
+
+        // Пока разрешил и модератору
 	if (!$Administrator && !$Moderator) return;
 
         include('import.php');
-       
+
 
 //	$statustext = $statustext.'</br>'.$n_new.' результатов добавлено, '.$n_updated.' изменено, '.$n_unchanged.' являются дубликатами';
 	$view = "ViewAdminDataPage";
@@ -333,9 +333,9 @@ elseif ($action == 'RecalcRaidResults')
 	$sql = 'select team_id
 		from Teams t
 			inner join Distances d on t.distance_id = d.distance_id
-		where d.distance_hide = 0 and t.team_hide = 0 and d.raid_id = '.$RaidId.' 
+		where d.distance_hide = 0 and t.team_hide = 0 and d.raid_id = '.$RaidId.'
                order by team_id';
-        
+
         $Result = MySqlQuery($sql);
 	// Цикл по всем командам
 	while ($Row = mysqli_fetch_assoc($Result))
@@ -347,7 +347,7 @@ elseif ($action == 'RecalcRaidResults')
 		// Обновляем результат команды
 		if (!$OldMmb) {
 			RecalcTeamResult($RecalcTeamId);
-		}	
+		}
 	}
 	mysqli_free_result($Result);
 
@@ -388,6 +388,10 @@ if ($action == "ViewAdminUnionPage")  {
 
 	CMmb::setViews('ViewAdminUnionPage', '');
 }
+// =============== Показываем страницу пакетной загрузки отметок==============
+if ($action == "ViewAdminMultiInputPage")  {
+	CMmb::setViews('ViewAdminMultiInputPage', '');
+}
 // =============== Показываем страницу объединения пользователей ===================
 if ($action == "ViewUserUnionPage")  {
         // Действие вызывается ссылкой Объединение
@@ -416,9 +420,9 @@ elseif ($action == 'RecalcRaidRank')
 
 	if (!$Administrator && !$Moderator) return;
 
-	
+
 	$Result = 0;
-	$Result =  RecalcTeamUsersRank($RaidId); 
+	$Result =  RecalcTeamUsersRank($RaidId);
 
 	CMmb::setShortResult('Рейтинг участников марш-броска пересчитан', 'ViewAdminDataPage');
 }
@@ -443,35 +447,35 @@ elseif ($action == 'SendMessageForAll')
 	     if (empty($pSubject) or trim($pSubject) == 'Тема рассылки')
 	     {
 		CMmb::setError('Укажите тему сообщения.', $view, '');
-                return; 
+                return;
 	     }
 
 
 	     if (empty($pText) or trim($pText) == 'Текст сообщения')
 	     {
 		CMmb::setError('Укажите текст сообщения.', $view, '');
-                return; 
+                return;
 	     }
 
 	     if (empty($pSendType) or $pSendType == 0)
 	     {
 		CMmb::setError('Укажите тип рассылки.', $view, '');
-                return; 
+                return;
 	     }
 
 	$Result = 0;
-	
+
 	//письмо о начале рассылки в группу
 	SendMail('mmbsitedeveloper@googlegroups.com', 'Запущена рассылка', 'Админы и разработчики ММБ');
 
 	$Result = SendMailForAll($RaidId, $pSubject, $pText, $pSendType);
-     
+
         if ($Result == 1)
         {
 		CMmb::setShortResult('Рассылка запущена', 'ViewAdminDataPage');
         } else {
         	CMmb::setError('Ошибка при отправке рассылки.', $view, '');
-                return; 
+                return;
         }
 }
 // =============== Генерация списка участников  ===================
@@ -490,20 +494,20 @@ elseif ($action == 'RaidTeamUsersExport')
         CMmb::setViews('ViewAdminDataPage', '');
 
 
-	$Sql = "select u.user_name, user_birthyear, 
+	$Sql = "select u.user_name, user_birthyear,
 			COALESCE(u.user_city, '') as user_city,
 			COALESCE(u.user_phone, '') as user_phone,
-		        t.team_num, t.team_name, t.team_outofrange  
-		from Teams t 
+		        t.team_num, t.team_name, t.team_outofrange
+		from Teams t
 			inner join Distances d on t.distance_id = d.distance_id
 			inner join TeamUsers tu on tu.team_id = t.team_id
 			inner join Users u on tu.user_id = u.user_id
-		where t.team_hide = 0 
+		where t.team_hide = 0
 			and tu.teamuser_hide = 0
 			and d.raid_id = $RaidId
 		order by user_name
 		";
-	
+
 	$Result = MySqlQuery($Sql);
 
 	// Заголовки, чтобы скачивать можно было и на мобильных устройствах просто браузером (который не умеет делать Save as...)
@@ -514,11 +518,11 @@ elseif ($action == 'RaidTeamUsersExport')
 	$output = fopen('php://output', 'w');
 
 	while ( ( $Row = mysqli_fetch_assoc($Result) ) )
-	{  
+	{
 		$strtowrite = trim($Row['user_name']).';'.$Row['user_birthyear'].';'.$Row['user_city'].';'.
 				$Row['user_phone'].';'.$Row['team_num'].';'.trim($Row['team_name']).';'.
 				$Row['team_outofrange'];
-		fwrite($output, iconv('UTF-8', 'Windows-1251', $strtowrite)."\n"); 
+		fwrite($output, iconv('UTF-8', 'Windows-1251', $strtowrite)."\n");
 		//fputcsv($output, $Row, ';');
 	}
 	mysqli_free_result($Result);
@@ -527,7 +531,7 @@ elseif ($action == 'RaidTeamUsersExport')
  	die();
  	return;
 
- 	
+
 }
 
 
@@ -558,7 +562,7 @@ elseif ($action == 'RankInvitations')
 		return;
 	}
 
-	// проверки на дату 
+	// проверки на дату
 	$sql = "select count(*) enddtcheck
     			from Raids r
 	    		where  r.raid_id = $RaidId
@@ -566,7 +570,7 @@ elseif ($action == 'RankInvitations')
 	    			and NOW() < '$pInvitationsEndDate'
 	    	";
 	$endDtCheck = CSql::singleValue($sql, 'enddtcheck', false);
-	
+
 	if (!$endDtCheck) {
                CMmb::setErrorSm('Дата окончания действия приглашений не прошла проверку.');
 		return;
@@ -597,20 +601,20 @@ elseif ($action == 'RankInvitations')
 		";
 	//echo $sql;
  	$newInvDeliveryId = MySqlQuery($sql);
- 	
+
  	//echo "newInvDeliveryId=  $newInvDeliveryId ";
 	if ($newInvDeliveryId <= 0)
 	{
                        CMmb::setErrorSm('Ошибка записи раздачи приглашения.');
 			return;
-	} 
+	}
 
 	// на всякий случай ещё раз проверяем
 	if (!CRights::canDeliveryInvitation($UserId, $RaidId, 1) or $pInvitationsCount > CSql::availableInvitationsCount($RaidId))
 	{
 		CMmb::setErrorMessage('Не хватает прав или нет доступных приглашений');
 		return;
-	} 
+	}
 
 
 
@@ -632,7 +636,7 @@ elseif ($action == 'RankInvitations')
 	//CMmb::setResult('', "ViewAdminDataPage", "");
 	return;
 
- 	
+
 }
 
 
@@ -678,25 +682,25 @@ elseif ($action == 'LottoInvitations')
 
 
 
-		
+
 	$sql = "insert into InvitationDeliveries (raid_id, invitationdelivery_type, invitationdelivery_dt, user_id, invitationdelivery_amount)
 					VALUES ($RaidId, 2, NOW(), $UserId, $pInvitationsCount)
 		";
 	//echo $sql;
  	$newInvDeliveryId = MySqlQuery($sql);
- 	
+
  	//echo "newInvDeliveryId=  $newInvDeliveryId ";
 	if ($newInvDeliveryId <= 0)
 	{
                        CMmb::setErrorSm('Ошибка записи раздачи приглашения.');
 			return;
-	} 
+	}
 
 
 	// Здесь нужна фиксация всех пользователей, которые участвуют в этом розыгрыше
-	// не допускаем к лотерее новых пользователей 
+	// не допускаем к лотерее новых пользователей
 	// Если нужно не пускать тех, кто не вышел на старт или дисквалифицирован, то  нужно дополнительно смотреть таблицу Users
-	
+
 	$sql = "update TeamUsers tu
 			inner join Teams t
 			on tu.team_id = t.team_id
@@ -711,7 +715,7 @@ elseif ($action == 'LottoInvitations')
 		";
 	// echo $sql;
  	MySqlQuery($sql);
- 	
+
 
 
 	// на всякий случай ещё раз проверяем
@@ -719,24 +723,24 @@ elseif ($action == 'LottoInvitations')
 	{
 		CMmb::setErrorMessage('Не хватает прав или нет доступных приглашений');
 		return;
-	} 
+	}
 
 	// А вот дальше собственно вставка приглашений на основании лотереи
-	// и их привязка к команде 
+	// и их привязка к команде
 
 
 	$sql = " CREATE TEMPORARY TABLE
 				tmp_lottoteams (
-				 num INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
-                                 team_id INT, 
+				 num INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                 team_id INT,
                                  user_id  INT
-				        ) 
+				        )
 				ENGINE=MEMORY, AUTO_INCREMENT = 0";
 	$rs = MySqlQuery($sql);
-				
+
 	// отбираем в таблицу команды вне зачета с автонумерованной первой колонкой
 	$sql = " INSERT INTO tmp_lottoteams (team_id, user_id)
-			 select t.team_id, MIN(tu.user_id) as user_id 
+			 select t.team_id, MIN(tu.user_id) as user_id
          			from   Teams t
         				inner join TeamUsers tu
 				        on t.team_id = tu.team_id
@@ -753,13 +757,13 @@ elseif ($action == 'LottoInvitations')
 	{
 		CMmb::setErrorMessage('Не хватает прав или нет доступных приглашений');
 		return;
-	} 
+	}
 
 
 	// Если нужны разыне вероятности, то можно добавить стоьлко раз строчку команды, сколько "веса"  она должна получить
 	//  находим случайно нужное число команд
 	// вставляем приглешния
-	
+
 	$sql = " insert into Invitations (user_id, invitation_begindt, invitation_enddt, invitationdelivery_id)
 		 select user_id, NOW(), NOW(), $newInvDeliveryId
 		 from tmp_lottoteams
@@ -767,7 +771,7 @@ elseif ($action == 'LottoInvitations')
 		 LIMIT $pInvitationsCount
 		  	          ";
        //   echo $sql;
-	 
+
 	$rs = MySqlQuery($sql);
 
 	// активируем команды , которые связаны с одной стороны с временой таблицы а через неё с приглашениями
@@ -782,7 +786,7 @@ elseif ($action == 'LottoInvitations')
 
 	// echo $sql
 	$rs = MySqlQuery($sql);
-	
+
 
 
 //	$sql = " DELETE FROM tmp_lottoteams  ";
@@ -792,7 +796,7 @@ elseif ($action == 'LottoInvitations')
 	//CMmb::setResult('Лотерея проведена', "ViewAdminDataPage", "");
 	return;
 
- 	
+
 }
 // =============== Пересчет рейтинга пользователей администратором ===================
 elseif ($action == 'RankRecalc')
@@ -822,7 +826,7 @@ elseif ($action == 'DeleteOutOfRangeTeams')
 		return;
 	}
 
-     
+
 
 	// проверяем
 	if (!CRights::canDeleteOutOfRangeTeams($UserId, $RaidId))
@@ -835,30 +839,30 @@ elseif ($action == 'DeleteOutOfRangeTeams')
 	SendMailForAll($RaidId, "Удаление команд, не получивших приглашения", "К сожалению, ваша команда не получила приглашения и будет удалена.", 5);
 
 
-	$sql = "UPDATE TeamUsers tu INNER JOIN Teams t on tu.team_id = t.team_id INNER JOIN Distances d on t.distance_id = d.distance_id  
-		SET tu.teamuser_hide = 1  
+	$sql = "UPDATE TeamUsers tu INNER JOIN Teams t on tu.team_id = t.team_id INNER JOIN Distances d on t.distance_id = d.distance_id
+		SET tu.teamuser_hide = 1
 		WHERE d.raid_id = $RaidId and t.team_outofrange = 1
 		";
 
 	//echo  $sql;
 	MySqlQuery($sql);
 
-	
 
-	$sql = "UPDATE Teams t INNER JOIN Distances d on t.distance_id = d.distance_id 
-		SET t.team_hide = 1  
+
+	$sql = "UPDATE Teams t INNER JOIN Distances d on t.distance_id = d.distance_id
+		SET t.team_hide = 1
 		WHERE d.raid_id = $RaidId and t.team_outofrange = 1
 		";
 
 	//echo  $sql;
 	MySqlQuery($sql);
 
-	
+
 	CMmb::setShortResult('Команды вне зачета удалены', '');
 	//CMmb::setResult('', "ViewAdminDataPage", "");
 	return;
 
- 	
+
 }
 
 // =============== Никаких действий не требуется ==============================
@@ -933,13 +937,13 @@ function ValidateTeam($Team, $Levels)
 		foreach ($teamlevel_points as $npoint => $point)
 		{
 
-                        if (empty($level_pointpenalties[$npoint]))                      
+                        if (empty($level_pointpenalties[$npoint]))
 			{
 			   $NowLevelPointPenalty = 0;
 			} else {
 			   $NowLevelPointPenalty = (int)$level_pointpenalties[$npoint];
 			}
-     
+
 			if ((($point == "0") && ($NowLevelPointPenalty > 0)) || (($point == "1") && ($NowLevelPointPenalty < 0)))
 			{
 				if (!empty($level_discountpoints[$npoint]))

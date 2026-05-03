@@ -21,6 +21,101 @@ function teamEditError($error)
 	$viewmode = "EditTlp";
 }
 
+function getLevelPointIdByName($pLevelPointName, $distanceId) {
+	global $RaidId;
+	$sql = "select levelpoint_id from LevelPoints where distance_id = ".intval($distanceId)." and levelpoint_name = ". CSql::quote($pLevelPointName);
+        $Result = MySqlQuery($sql);
+	$row_cnt = mysqli_num_rows($Result);
+	if ($row_cnt != 1) {
+		throw new Exception("точка не найдена по названию [$pLevelPointName], results_cnt: $row_cnt");
+	}
+	$row = mysqli_fetch_assoc($Result);
+	return intval($row['levelpoint_id']);
+}
+
+function getDistanceIdAndTeamIdForTeamNum($pTeamNum) {
+	global $RaidId;
+	$sql = "select team_id, distance_id from Teams where distance_id in (select distance_id from Distances where raid_id = ".intval($RaidId).") and team_num = ". intval($pTeamNum);
+        $Result = MySqlQuery($sql);
+	$row_cnt = mysqli_num_rows($Result);
+	if ($row_cnt != 1) {
+		throw new Exception("команда [$pTeamNum] не найдена, results_cnt: $row_cnt");
+	}
+	$row = mysqli_fetch_assoc($Result);
+	return ['teamId' => intval($row['team_id']), 'distanceId' => intval($row['distance_id'])];
+}
+
+function parseDate($dateStr) {
+	// 2025-10-24 21:26:49
+	$format = 'Y-m-d H:i:s';
+	$date = DateTime::createFromFormat($format, $dateStr);
+	if ($date === false || $date->format($format) !== $dateStr) {
+		throw new Exception("неверный формат даты");
+	}
+	return CSql::timeString($date->format('Y'), $date->format('dm'), $date->format('His'), false);
+}
+
+function AddTlp($pTeamId, $pLevelPointId, $pTlpComment, $pErrorId, $TlpYDTs) {
+	global $UserId, $RaidID;
+	$errs = [];
+        // тут по-хорошему нужны проверки
+	if ($pTeamId <= 0 or $pLevelPointId <= 0)
+	{
+		array_push($errs, 'Не определён ключ команды или ключ точки для результата.');
+		//$viewmode = "EditTlp";
+		return $errs;
+	}
+
+
+        $sql = " select count(*) as countresult
+	          from TeamLevelPoints
+	          where team_id = $pTeamId
+		        and levelpoint_id = $pLevelPointId";
+
+	if  (((int) CSql::singleValue($sql, 'countresult')) > 0)
+	{
+		array_push($errs, 'Результаты по точке уже есть.');
+		return $errs;
+	}
+
+
+        // потом добавить время макс. и мин.
+
+	$sql = "insert into TeamLevelPoints (team_id, levelpoint_id,
+                device_id,
+		teamlevelpoint_datetime, teamlevelpoint_comment, error_id, teamlevelpoint_date)
+		values ($pTeamId, $pLevelPointId, 1,
+		        $TlpYDTs, '$pTlpComment', $pErrorId, NOW())";
+
+
+	//  echo $sql;
+	// При insert должен вернуться послений id - это реализовано в MySqlQuery
+	$TeamLevelPointId = MySqlQuery($sql);
+
+	if ($TeamLevelPointId <= 0)
+	{
+		array_push($errs, 'Ошибка записи нового результата для точки.');
+		return $errs;
+	}
+
+/*
+	 $statustext = CheckLevelPoints($DistanceId);
+	 if (!empty($error))
+	 {
+		$alert = 1;
+	 }
+*/
+
+	// Временно отключил, так как при больших правках тормозит сильно.
+	// Пересчет результатов срабатывает при редактировании данных, ну и общий пересчет по всем командам, конечно
+        // RecalcTeamResultFromTeamLevelPoints(0,  $pTeamId);
+
+
+	//$view = $_POST['view'];
+	//if (empty($view)) $view = "ViewTeamData";
+	return $errs;
+}
+
 //echo 'action '.$action;
 
 // =============== Изменение/добавление результатов команды ===================
@@ -125,7 +220,7 @@ if ($action == "ChangeTeamResult")
 		// Обрабатываем комментарии
 		$Comment = $_POST[$levelPfx.'_comment'];
 		$connectionId = CSql::getConnection();
-	
+
 		if ($Comment == "") $Comment = "NULL"; else $Comment = "'" . mysqli_real_escape_string($connectionId, $Comment) . "'";
 
 
@@ -156,7 +251,7 @@ if ($action == "ChangeTeamResult")
 
 	// Пересчет врмени нахождения команды на этапах
 	RecalcTeamLevelDuration($TeamId);
-	// Пересчет штрафов 
+	// Пересчет штрафов
 	RecalcTeamLevelPenalty($TeamId);
 
         //  10/06/2014 если старцый ММБ. то не обновляем результат
@@ -174,89 +269,76 @@ if ($action == "ChangeTeamResult")
 // ============ Добавить точку  =============
 elseif ($action == 'AddTlp')
 {
-	//$view = "ViewLevelPoints";
-	//$viewmode = "AddTlp";
-
-
-	// Общая проверка возможности редактирования
-//	if (!$Administrator && !$Moderator)
-
 	if (!CRights::canEditPointResult($UserId, $RaidId, $TeamId))
 	{
 		CMmb::setMessage('Нет прав на ввод  результата для точки');
 		return;
 	}
 
-
-
-
 	$pTeamId = mmb_validateInt($_POST, 'TeamId');
 	$pLevelPointId = mmb_validateInt($_POST, 'LevelPointId');
-        //$pPointName = $_POST['PointName'];
-
         $pTlpComment = $_POST['TlpComment'];
 	$pErrorId = mmb_validateInt($_POST, 'ErrorId', -1);
-
 	$TlpYDTs = CSql::timeString2($_POST, 'TlpYear', 'TlpDate', 'TlpTime', false);
 
-         // тут по-хорошему нужны проверки
-	if ($pTeamId <= 0 or $pLevelPointId <= 0)
-	{
-		teamAddError('Не определён ключ команды или ключ точки для результата.');
-		//$viewmode = "EditTlp";
-		return;
+	$res = AddTlp($pTeamId, $pLevelPointId, $pTlpComment, $pErrorId, $TlpYDTs);
+	foreach($res as $err) {
+		teamAddError($err);
 	}
-
-
-        $sql = " select count(*) as countresult
-	          from TeamLevelPoints
-	          where team_id = $pTeamId
-		        and levelpoint_id = $pLevelPointId";
-
-	if  (((int) CSql::singleValue($sql, 'countresult')) > 0)
-	{
-		teamAddError('Результаты по точке уже есть.');
-		return;
-	}
-
-
-        // потом добавить время макс. и мин.
-	     
-	$sql = "insert into TeamLevelPoints (team_id, levelpoint_id,
-                device_id,
-		teamlevelpoint_datetime, teamlevelpoint_comment, error_id, teamlevelpoint_date)
-		values ($pTeamId, $pLevelPointId, 1,
-		        $TlpYDTs, '$pTlpComment', $pErrorId, NOW())";
-
-
-	//  echo $sql;
-	// При insert должен вернуться послений id - это реализовано в MySqlQuery
-	$TeamLevelPointId = MySqlQuery($sql);
-
-	if ($TeamLevelPointId <= 0)
-	{
-		teamAddError('Ошибка записи нового результата для точки.');
-		return;
-	}
-	
-/*
-	 $statustext = CheckLevelPoints($DistanceId);
-	 if (!empty($error))
-	 {
-		$alert = 1;
-	 }
-*/
-
-	// Временно отключил, так как при больших правках тормозит сильно.
-	// Пересчет результатов срабатывает при редактировании данных, ну и общий пересчет по всем командам, конечно
-        // RecalcTeamResultFromTeamLevelPoints(0,  $pTeamId);
-
-
-	//$view = $_POST['view'];
-	//if (empty($view)) $view = "ViewTeamData";
 
  }
- elseif ($action == "TlpInfo")  
+ elseif ($action == 'AddTlpBatch')
+{
+        CMmb::setViews('ViewAdminMultiInputPage', '');
+	if (!CRights::canEditPointResult($UserId, $RaidId, 0))
+	{
+		CMmb::setMessage('Нет прав на ввод  результата для точки');
+		return;
+	}
+	$punches = stripcslashes(stripcslashes($_POST['punches']));
+	if (isset($_FILES['csvFile'])) {
+		$file = $_FILES['csvFile'];
+		$fileError = $file['error'];
+		$fileTmpPath = $file['tmp_name'];
+		if ($fileError === UPLOAD_ERR_OK) {
+	        	$punches = file_get_contents($fileTmpPath);
+		}
+	}
+	$processed_punches = [];
+	foreach(explode("\n", $punches) as $punch) {
+		$punch = trim($punch);
+		$punch_copy = $punch;
+		$punch = trim(explode("#", $punch)[0]);
+		$punch_data = explode("\t", str_replace(";", "\t", $punch));
+		if (sizeof($punch_data) == 0 || ! is_numeric($punch_data[0])) {
+			// header
+			array_push($processed_punches, $punch_copy);
+		} else {
+			try {
+				if (count($punch_data) < 3) {
+					throw new Exception('Недостаточно данных');
+				}
+				$pTeamNum = intval($punch_data[0]);
+				$pLevelPointName = $punch_data[1];
+				$pLevelPointDateTime = $punch_data[2];
+				$distanceIdAndTeamId = getDistanceIdAndTeamIdForTeamNum($pTeamNum);
+				$pTeamId = $distanceIdAndTeamId['teamId'];
+				$distanceId = $distanceIdAndTeamId['distanceId'];
+				$pLevelPointId = getLevelPointIdByName($pLevelPointName, $distanceId);
+				$TlpYDTs = parseDate($punch_data[2]);
+				$res = AddTlp($pTeamId, $pLevelPointId, '', 0, $TlpYDTs);
+				if (sizeof($res) == 0) {
+					array_push($processed_punches, "#" . $punch);
+				} else {
+					array_push($processed_punches, $punch . ' # ' . implode(', ', $res));
+				}
+			} catch(Exception $e) {
+				array_push($processed_punches, $punch . ' # ' . $e->getMessage());
+			}
+		}
+	}
+}
+ elseif ($action == "TlpInfo")
  {
     // Действие вызывается кнопокй "Править" в таблице точек
 
@@ -273,8 +355,6 @@ elseif ($action == 'ChangeTlp')
 		CMmb::setMessage('Нет прав на правку результата для точки');
 		return;
 	}
-
-  
 
         $pTeamLevelPointId = mmb_validateInt($_POST, 'TeamLevelPointId');
 
@@ -306,7 +386,7 @@ elseif ($action == 'ChangeTlp')
 	          where team_id = $pTeamId
 		        and levelpoint_id = $pLevelPointId
 			and teamlevelpoint_id <> $pTeamLevelPointId";
-                
+
 	if  (CSql::singleValue($sql, 'countresult') > 0)
 	{
 		CMmb::setErrorSm('Результаты по точке уже есть.', 'ReturnAfterErrorTlp');
@@ -315,9 +395,9 @@ elseif ($action == 'ChangeTlp')
 
 
 
-	
 
-		
+
+
         $sql = "update TeamLevelPoints  set levelpoint_id = $pLevelPointId
 	                                ,team_id = $pTeamId
 	                                ,error_id = $pErrorId
@@ -325,22 +405,22 @@ elseif ($action == 'ChangeTlp')
 	                                ,teamlevelpoint_datetime = $TlpYDTs
 	                                ,teamlevelpoint_date = NOW()
 	        where teamlevelpoint_id = $pTeamLevelPointId";
-			
+
 	//echo $sql;
-			
+
 	 MySqlQuery($sql);
-    
+
 
          RecalcTeamResultFromTeamLevelPoints(0,  $pTeamId);
 //         RecalcTeamResultFromTeamLevelPoints(25, 0);
-    
-    /*   
+
+    /*
 	 $statustext = CheckLevelPoints($DistanceId);
 	 if (!empty($error))
 	 {
 		$alert = 1;
 	 }
-	*/	
+	*/
 
 }
 // ============ Удаление точки  =============
@@ -356,7 +436,7 @@ elseif ($action == 'HideTlp')
         $pTeamLevelPointId = mmb_validateInt($_POST, 'TeamLevelPointId');
         $pTeamId = mmb_validateInt($_POST, 'TeamId');
 
-	
+
 	if ($pTeamId <= 0)
 	{
 		teamEditError('Не определён ключ команды.');
@@ -370,11 +450,11 @@ elseif ($action == 'HideTlp')
 		teamEditError('Не определён ключ результата для точки.');
 		return;
 	}
-	
+
 
         $sql = "delete from TeamLevelPoints where teamlevelpoint_id = $pTeamLevelPointId";
-       
-			
+
+
 	 MySqlQuery($sql);
 
 
@@ -389,7 +469,7 @@ elseif ($action == 'HideTlp')
 	 }
 */
 
-		
+
 
 }
 else
