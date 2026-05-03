@@ -8,7 +8,7 @@ if (!isset($viewmode)) $viewmode = "";
 if (!isset($viewsubmode)) $viewsubmode = "";
 
 
-// Определяем права по редактированию 
+// Определяем права по редактированию
 if ($Administrator || $Moderator)
 {
 	$AllowEdit = 1;
@@ -26,7 +26,7 @@ if ($Administrator || $Moderator || $RaidStage >= 5)
 {
 	$AllowViewResults = 1;
 }
-else 
+else
 {
        $AllowViewResults = 0;
 }
@@ -56,14 +56,14 @@ if ($viewmode == 'Add')
 
 	}
 	else
-	// Инициализация перемнных для новой точки 
+	// Инициализация перемнных для новой точки
 	{
 
 
 
                 // дистанция уже должна быть инициализирована в raidactions!
                 if (empty($DistanceId)) {return;}
-		
+
 		// 18/03/2014 По умолчанию ставим  тип КП
 		$PointTypeId = 5;
                 $PointName = 'Название КП';
@@ -78,7 +78,7 @@ if ($viewmode == 'Add')
 
                // $ScanPointId = 0;
 	      //  $LevelId = 0;
-	    
+
 	}
 
 	// Определяем следующее действие
@@ -106,8 +106,8 @@ else
        // 19.06.2015 Добавил level_id чтобы проставить ввести точки по старым ММБ,
        // потом можно и нужно убрать
 
-	$sql = "select lp.levelpoint_id, pt.pointtype_id, pt.pointtype_name,  
-	               lp.levelpoint_name, lp.levelpoint_penalty, 
+	$sql = "select lp.levelpoint_id, pt.pointtype_id, pt.pointtype_name,
+	               lp.levelpoint_name, lp.levelpoint_penalty,
 		       lp.distance_id, lp.levelpoint_order,
 		       lp.levelpoint_mindatetime, lp.levelpoint_maxdatetime,
 		       DATE_FORMAT(lp.levelpoint_mindatetime, '%Y') as levelpoint_sminyear,
@@ -159,7 +159,7 @@ else
             //    $LevelId = $Row['level_id'];
 
 
-	}	
+	}
 
 	$NextActionName = 'LevelPointChange';
 	$OnClickText = '';
@@ -171,10 +171,10 @@ else
 
 // В форме правки выводится только день и время, год считаем по дате регистарции ММБ и не выводим
 
-if (empty($LevelPointMinYear) or (int)$LevelPointMinYear == 0 or 
+if (empty($LevelPointMinYear) or (int)$LevelPointMinYear == 0 or
 	empty($LevelPointMaxYear) or (int)$LevelPointMaxYear == 0) {
 
-		$RaidYear = 0;		
+		$RaidYear = 0;
 		$sql = "select YEAR(NOW()) as raidyear
 			from Raids r
 		             inner join Distances d
@@ -184,11 +184,11 @@ if (empty($LevelPointMinYear) or (int)$LevelPointMinYear == 0 or
 		$RaidYear = CSql::singleValue($sql, 'raidyear');
 
 		if (empty($LevelPointMinYear) or (int)$LevelPointMinYear == 0)
-		{ 
+		{
 			$LevelPointMinYear = $RaidYear;
 		}
 		if (empty($LevelPointMaxYear) or (int)$LevelPointMaxYear == 0)
-		{ 
+		{
 			$LevelPointMaxYear = $RaidYear;
 		}
 
@@ -254,7 +254,7 @@ if (empty($LevelPointMinYear) or (int)$LevelPointMinYear == 0 or
 		document.LevelPointForm.action.value = "CancelChangeLevelPoint";
 		document.LevelPointForm.submit();
 	}
-	// 
+	//
 </script>
 
 
@@ -379,12 +379,12 @@ if ($AllowEdit == 1)
 	print("</td></tr>\r\n");
 
 	print("<tr><td>\r\n");
-          
+
 	print("Дата (ддмм) и время (ччмм) ограничений для прохождения точки: <br/>  снизу\r\n");
 
         // Можно отключить правку написав  $MinDateReadOnly = 'readonly'
         $MinDateReadOnly = '';
-	
+
 	print('<input type="hidden" maxlength="4" name="MinYear" size="3" value="'.$LevelPointMinYear.'" >'."\n");
 	print('<input type="Text" maxlength="4" name="MinDate" size="3" value="'.$LevelPointMinDate.'" tabindex="'.(++$TabIndex).'"'.$MinDateReadOnly.' title="ддмм - день месяц без разделителя" onclick="this.select();" onkeydown="if (event.keyCode == 13 && this.value.length == 4) {document.LevelPointForm.MinTime.focus();}">'."\n");
 	print('<input type="Text" maxlength="4" name="MinTime" size="3" value="'.$LevelPointMinTime.'" tabindex="'.(++$TabIndex).'"'.' onclick="this.select();" title="ччмм - часы минуты без разделителя">'."\n");
@@ -393,7 +393,7 @@ if ($AllowEdit == 1)
 
 
         $MaxDateReadOnly = '';
-        
+
 	print('<input type="hidden" maxlength="4" name="MaxYear" size="3" value="'.$LevelPointMaxYear.'" >'."\n");
 	print('<input type="Text" maxlength="4" name="MaxDate" size="3" value="'.$LevelPointMaxDate.'" tabindex="'.(++$TabIndex).'"'.$MaxDateReadOnly.' title="ддмм - день месяц без разделителя" onclick="this.select();" onkeydown="if (event.keyCode == 13 && this.value.length == 4) {document.LevelPointForm.MaxTime.focus();}">'."\n");
 	print('<input type="Text" maxlength="4" name="MaxTime" size="3" value="'.$LevelPointMaxTime.'" tabindex="'.(++$TabIndex).'"'.' onclick="this.select();" title="ччмм - часы минуты без разделителя">'."\n");
@@ -405,7 +405,7 @@ if ($AllowEdit == 1)
 	print('</tr><td class="input" style="padding-top: 20px;">'."\n");
 	print('<input type="button" onClick="javascript: if (ValidateLevelPointForm()) submit();" name="RegisterButton" value="'.$SaveButtonText.'" tabindex="'.(++$TabIndex).'">'."\n");
 //	print('<input type="button" onClick="javascript: Cancel();" name="CancelButton" value="Отмена" tabindex="'.(++$TabIndex).'">'."\n");
-	
+
 
 	// ============ Кнопка удаления точки
 	if (($viewmode <> "Add") && ($AllowEdit == 1))
@@ -417,7 +417,8 @@ if ($AllowEdit == 1)
 
 	print("</td></tr>\r\n");
 	print('<tr><td>После добавления, дистанцию у точки изменить нельзя - только удалив и добавив точку заново.
-	               <br/> Амнистия редактируется в <a href="?amnesty&RaidId='.$RaidId.'">отдельном окне</a>.</td></tr>'."\r\n");
+	               <br/> Амнистия редактируется в <a href="?amnesty&RaidId='.$RaidId.'">отдельном окне</a>.
+	               <br/> Пакетная загрузка отметок доступна в <a href="?action=ViewAdminMultiInputPage&RaidId='.$RaidId.'">отдельном окне</a>.</td></tr>'."\r\n");
 
 	print("</table>\r\n");
 	print("</form>\r\n");
@@ -447,8 +448,8 @@ if ($AllowViewResults == 1)
 //		       COALESCE(l.level_name, 'Не указан') as level_name
 
 
-	$sql = "select lp.levelpoint_id, pt.pointtype_id, pt.pointtype_name,  
-	               lp.levelpoint_name, lp.levelpoint_penalty, 
+	$sql = "select lp.levelpoint_id, pt.pointtype_id, pt.pointtype_name,
+	               lp.levelpoint_name, lp.levelpoint_penalty,
 		       lp.distance_id, lp.levelpoint_order,
 		       DATE_FORMAT(COALESCE(lp.levelpoint_mindatetime, '0000-00-00 00:00:00'), '%m-%d %H:%i') as levelpoint_mindatetime,
 		       DATE_FORMAT(COALESCE(lp.levelpoint_maxdatetime, '0000-00-00 00:00:00'), '%m-%d %H:%i') as levelpoint_maxdatetime,
@@ -486,10 +487,10 @@ if ($AllowViewResults == 1)
 		     on lp.levelpoint_id = tlp2.levelpoint_id
 		where lp.levelpoint_hide = 0 and lp.distance_id = $DistanceId
 		order by levelpoint_order";
-	
-	
+
+
 	$Result = MySqlQuery($sql);
-	
+
 
 		print("<table class=\"std\">\r\n");
 
@@ -510,10 +511,10 @@ if ($AllowViewResults == 1)
 		{
 		       print('<td width="100">&nbsp;</td>'."\r\n");
 		}
-		
-	
+
+
 		print("</tr>\r\n");
-		
+
 	        // Сканируем команды
 		while ($Row = mysqli_fetch_assoc($Result))
 		{
@@ -521,7 +522,7 @@ if ($AllowViewResults == 1)
 //                            <td align = "left" style = "'.$tdstyle.'">'.$Row['level_name'].'</td>
 
 			//                       <td>{$Row['scanpoint_name']}</td>
-	
+
                      print("<tr>\r\n");
 		     print("<td>{$Row['levelpoint_order']}</td>
      		            <td>{$Row['pointtype_name']}</td>
@@ -539,14 +540,14 @@ if ($AllowViewResults == 1)
 			     print('</td>'."\r\n");
 		     }
 		     print("</tr>\r\n");
-		}	
+		}
 
 		mysqli_free_result($Result);
 		print("</table>\r\n");
-	
+
 
                print("</br>\n");
-  
+
    }
    // Конец проверки прав на просмотр точек
 
@@ -566,14 +567,14 @@ if ($AllowViewResults == 1)
 	print('</td></tr>'."\n\n");
 	print('</table>'."\r\n");
 	print('</form>'."\r\n");
-	
-  
+
+
         print('</br>'."\n");
 
 	// Список этапов
 
-	$sql = "select l.level_id, l.level_order, l.level_name,   
-                       l.level_starttype, 
+	$sql = "select l.level_id, l.level_order, l.level_name,
+                       l.level_starttype,
       		       DATE_FORMAT(COALESCE(l.level_begtime, '0000-00-00 00:00:00'), '%m-%d %H:%i') as level_begtime,
       		       DATE_FORMAT(COALESCE(l.level_maxbegtime, '0000-00-00 00:00:00'), '%m-%d %H:%i') as level_maxbegtime,
       		       DATE_FORMAT(COALESCE(l.level_minendtime, '0000-00-00 00:00:00'), '%m-%d %H:%i') as level_minendtime,
@@ -582,15 +583,15 @@ if ($AllowViewResults == 1)
 		from Levels l
 		where l.level_hide = 0 and l.distance_id = ".$DistanceId."
 		order by level_order";
-	
+
 	//echo $sql;
 	$Result = MySqlQuery($sql);
-	
-	$tdstyle = 'padding: 5px 0px 2px 5px;';		
-        $thstyle = 'padding: 5px 0px 0px 5px;';		
+
+	$tdstyle = 'padding: 5px 0px 2px 5px;';
+        $thstyle = 'padding: 5px 0px 0px 5px;';
 
 
-	print('<table border = "1" cellpadding = "0" cellspacing = "0" style = "font-size: 80%">'."\r\n");  
+	print('<table border = "1" cellpadding = "0" cellspacing = "0" style = "font-size: 80%">'."\r\n");
 
 	print('<tr class = "gray">
 	         <td width = "50" style = "'.$thstyle.'">N п/п</td>
@@ -605,9 +606,9 @@ if ($AllowViewResults == 1)
 	         <td width = "150" style = "'.$thstyle.'">КП в амнистии</td>
 	         <td width = "100" style = "'.$thstyle.'">Амнистия</td>'."\r\n");
 
-			
+
 	print('</tr>'."\r\n");
-		
+
 	// Сканируем команды
 	while ($Row = mysqli_fetch_assoc($Result))
 	{
@@ -625,13 +626,13 @@ if ($AllowViewResults == 1)
 	             <td align = "left" style = "'.$tdstyle.'">'.$Row['level_discountpoints'].'</td>
 	             <td align = "left" style = "'.$tdstyle.'">'.$Row['level_discount'].'</td>');
 
-  	                               
-	}	
+
+	}
 
 	mysqli_free_result($Result);
 	print('</table>'."\r\n");
 
-   } 
+   }
    // Конец проверки на право правки
 */
 ?>

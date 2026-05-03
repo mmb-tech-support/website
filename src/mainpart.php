@@ -47,6 +47,9 @@ if (!isset($MyPHPScript)) return;
 	} elseif ($view == "ViewAdminUnionPage") {
 		// Объединение команд
 		include("viewadminunionpage.php");
+	} elseif ($view == "ViewAdminMultiInputPage") {
+		// Пакетный ввод
+		include("viewadminmultiinputpage.php");
 	} elseif ($view == "ViewUserUnionPage") {
 		// Связь пользователей
 		include("viewuserunionpage.php");
